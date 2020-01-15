@@ -9,4 +9,4 @@ const StoreSchema = new Schema({
     price: Number
 })
 
-module.exports = mongoose.model('sell-quotes', StoreSchema)
+module.exports = mongoose.model('Store', StoreSchema)

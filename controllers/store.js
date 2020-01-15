@@ -24,14 +24,19 @@ function show(req, res){
     })
 }
 
-function create(req, res){
-    Store.create(req.body).then(function(storeQuote){
+async function create(req, res){
+    console.log('controller create')
+    console.log(req.body)
+    let newEntry = await Store.create(req.body, function(err, storeQuote){
+        console.log('inside callback')
         if(err){
             return res.status(400).json(err)
         }else{
             return res.status(201).json(storeQuote)
         }
     })
+    console.log(newEntry)
+    return(newEntry)
 }
 
 function index(req, res){

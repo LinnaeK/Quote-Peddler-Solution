@@ -2,11 +2,14 @@ const express = require('express');
 const path = require('path');
 const favicon = require('serve-favicon');
 const logger = require('morgan');
+const cors = require('cors')
 
 var storeRouter = require('./routes/store');
 var cartRouter = require('./routes/cart');
 
 const app = express();
+app.use(cors())
+require('./config/database')
 
 
 

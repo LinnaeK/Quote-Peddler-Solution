@@ -1,15 +1,34 @@
 var Cart = require('../models/cart.js')
 var Store = require('../models/store.js')
+var {Error} = require('../backendUtils/error')
 
-module.exports = {
-    index,
-    create, 
-    show, 
-    update, 
-    delete: deleteQuote
+async function decrementStore(id){
+    const quote = await Store.findById(id)
+    quote.quantity--
+    console.log(quote)
+    quote.save((err)=>{
+        if(err){
+            console.error(err)
+        }
+    } )
+    if (quote.quantity < 0){
+        return Error('There are no more quotes available.')
+    } 
 }
 
-const update = async(req, res){
+const incrementStore = async(id)=>{
+    try {
+        const quote = await Store.findById(id)
+        quote.quantity++
+        quote.save()
+    }catch(e){
+        res.json(e)
+        console.log(e)
+    }
+
+}
+
+const update = async(req, res) => {
     Cart.findByIdAndUpdate(
         req.params.id,
         req.body,
@@ -32,8 +51,9 @@ const show =  async(req, res) => {
 const create = async(req, res) => {
     try{
         const { _id, quantity, image, quote, price } = req.body
-        const itemInCart = await Cart.findOne({ itemId: _id })
-        const decrementStore = await decrementStore(itemId)
+        const reduceStoreQuantity = await decrementStore(_id)
+        const itemInCart = await Cart.findOne({ storeId: _id })
+        console.log(itemInCart)
         if (itemInCart) {
             itemInCart.quantity += 1
             const saved = await itemInCart.save()
@@ -46,7 +66,7 @@ const create = async(req, res) => {
                 quote,
                 price
             })
-
+            cartQuote.quantity = 1
             const saved = await cartQuote.save()
             res.json(saved)
         }
@@ -56,33 +76,16 @@ const create = async(req, res) => {
     }
 }
 
-const decrementStore = async(id)=>{
-    const quote = Store.findById(id)
-    quote.quantity--
-    quote.save()
-}
-
-const incrementStore = async(id)=>{
-    try {
-        const quote = Store.findById(id)
-        quote.quantity++
-        quote.save()
-    }catch(e){
-        res.json(e)
-        console.log(e)
-    }
-
-}
-
 const index =  async(req, res) => {
-    await.Cart.find({})
+    let cartQuotes = await Cart.find({})
+    res.status(200).json(cartQuotes)
 }
 
 const deleteQuote = async(req,res) => {
     try {
-        const removedItem = await Cart.findOne(req.params._id)
+        const removedItem = await Cart.findOne({_id: req.params.id})
         removedItem.quantity--
-        if(removedItem.quantity <= 0)){
+        if(removedItem.quantity <= 0){
             const success = removedItem.remove()
             const updateStore = await incrementStore(success.storeId)
             res.json(success)
@@ -96,3 +99,11 @@ const deleteQuote = async(req,res) => {
         res.json(e)
     }
 }  
+
+module.exports = {
+    index,
+    create, 
+    show, 
+    update, 
+    delete: deleteQuote
+}
